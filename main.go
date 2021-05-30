@@ -10,8 +10,9 @@ type user struct{
 	name string
 }
 
-func AddUserData(stmt *sql.Stmt, data user){
-	
+func AddUserData(db *sql.DB, data user){
+
+	stmt, _ := db.Prepare("INSERT INTO User (rollno, name) VALUES (?, ?)")
 	stmt.Exec(data.rollno, data.name);
 
 }
@@ -23,11 +24,11 @@ func main(){
 	statement, _ := database.Prepare( "CREATE TABLE IF NOT EXISTS User ( rollno INTEGER PRIMARY KEY, name TEXT )")
 	statement.Exec()
 
-	stmt, _ := database.Prepare("INSERT INTO User (rollno, name) VALUES (?, ?)")
+	//stmt, _ := database.Prepare("INSERT INTO User (rollno, name) VALUES (?, ?)")
 
 	data := user{rollno: 190998, name: "Yash Gupta"}
 
-	AddUserData(stmt, data)
+	AddUserData(database, data)
 
 
 }
