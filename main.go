@@ -24,11 +24,8 @@ func main(){
 	statement, _ := database.Prepare( "CREATE TABLE IF NOT EXISTS User ( rollno INTEGER PRIMARY KEY, name TEXT )")
 	statement.Exec()
 
-	//stmt, _ := database.Prepare("INSERT INTO User (rollno, name) VALUES (?, ?)")
-
 	data := user{rollno: 190998, name: "Yash Gupta"}
 
 	AddUserData(database, data)
-
 
 }
