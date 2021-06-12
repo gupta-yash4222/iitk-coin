@@ -14,7 +14,7 @@ import (
 )
 
 var jwtKey = []byte("CROWmium")
-var validDuration int = 10
+var validDuration time.Duration = 25
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -69,7 +69,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	var result model.Session
 
-	expirationTime := time.Now().Add(25 * time.Second)
+	expirationTime := time.Now().Add(validDuration * time.Second)
 
 	admin := false
 	if user.Rollno == 190998 {
