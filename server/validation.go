@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"log"
 	jwt "github.com/dgrijalva/jwt-go"
 
 
@@ -14,7 +13,20 @@ import (
 func WelcomeUser(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json")
 
-	tokenString := r.Header.Get("Authorization")
+	//tokenString := r.Header.Get("Authorization")
+	//splitToken := strings.Split(tokenString, "Bearer ")
+	//tokenString = splitToken[1]
+
+	var res model.Response
+
+	cookie, err := r.Cookie("token")
+	if err != nil{
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	tokenString := cookie.Value
 
 	tokenClaims := &model.JWTclaims{}
 
@@ -28,14 +40,20 @@ func WelcomeUser(w http.ResponseWriter, r *http.Request){
 	})
 
 	if err != nil{
-		log.Fatal(err)
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
 	}
 
-	
-	var res model.Response
-
 	if token.Valid{
-		fmt.Fprintf(w, "Everyone welcome %s. We hope you brought pizzas.", tokenClaims.Name)
+
+		if !tokenClaims.Admin{
+			res.Result = "Access denied"
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		fmt.Fprintf(w, "Everyone welcome %s. We hope you have brought pizzas.", tokenClaims.Name)
 
 		res.Result = "Access granted"
 		json.NewEncoder(w).Encode(res)

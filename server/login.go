@@ -16,22 +16,21 @@ import (
 var jwtKey = []byte("CROWmium")
 var validDuration int = 10
 
-
-func LoginUser(w http.ResponseWriter, r *http.Request){
+func LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var user model.User
 	var res model.Response
 
 	body, err := ioutil.ReadAll(r.Body)
-	if err != nil{
+	if err != nil {
 		res.Error = err.Error()
 		json.NewEncoder(w).Encode(res)
 		return
 	}
 
 	err = json.Unmarshal(body, &user)
-	if err != nil{
+	if err != nil {
 		res.Error = err.Error()
 		json.NewEncoder(w).Encode(res)
 		return
@@ -39,8 +38,8 @@ func LoginUser(w http.ResponseWriter, r *http.Request){
 
 	data, err := db.FindUser(user.Rollno)
 
-	if err != nil{
-		if err.Error() == "sql: no rows in result set"{
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
 			res.Result = "User not registered"
 			json.NewEncoder(w).Encode(res)
 			return
@@ -51,15 +50,15 @@ func LoginUser(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	if user.Name != data.Name{
-		res.Result = "Invalid Username"  // given username doesn't matches with the registered username
+	if user.Name != data.Name {
+		res.Result = "Invalid Username" // given username doesn't matches with the registered username
 		json.NewEncoder(w).Encode(res)
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(data.Password), []byte(user.Password))
 
-	if err != nil{
+	if err != nil {
 		res.Result = "Invalid password"
 		json.NewEncoder(w).Encode(res)
 		return
@@ -72,19 +71,23 @@ func LoginUser(w http.ResponseWriter, r *http.Request){
 
 	expirationTime := time.Now().Add(25 * time.Second)
 
+	admin := false
+	if user.Rollno == 190998 {
+		admin = true
+	}
+
 	userClaims := model.JWTclaims{
-		Rollno: user.Rollno,
-		Name: user.Name,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
+		Rollno:         user.Rollno,
+		Name:           user.Name,
+		Admin:          admin,
+		StandardClaims: jwt.StandardClaims{ExpiresAt: expirationTime.Unix()},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, userClaims)
 
 	tokenString, err := token.SignedString(jwtKey)
 
-	if err != nil{
+	if err != nil {
 		res.Error = "Error while generating JSON Web Token. Please try again"
 		json.NewEncoder(w).Encode(res)
 		return
@@ -95,6 +98,13 @@ func LoginUser(w http.ResponseWriter, r *http.Request){
 	result.IsLoggedIn = true
 
 	//json.NewEncoder(w).Encode(res)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "token",
+		Value: tokenString,
+		HttpOnly: true,
+	})
+
 	json.NewEncoder(w).Encode(result)
 
 }

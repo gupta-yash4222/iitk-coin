@@ -1,15 +1,18 @@
 package db
 
-import(
+import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"errors"
 	"fmt"
 	"log"
-	"errors"
+	"net/http"
+
 	"github.com/gupta-yash4222/iitk-coin/model"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func FindUser(roll int) (model.User, error) {
+// Finds a user with the given rollno
+func FindUser(roll int) (model.User, error) {  
 
 	var data model.User
 
@@ -31,7 +34,8 @@ func FindUser(roll int) (model.User, error) {
 	return data, nil
 }
 
-func AddUserData(data model.User) error {
+// Adds a user with the given credentials if not already present in the database
+func AddUserData(data model.User) error { 
 
 	db, err := sql.Open( "sqlite3", "user_details.db")
 
@@ -65,7 +69,8 @@ func AddUserData(data model.User) error {
 
 }
 
-func FetchUserData() error {
+// Fetch all registered users from the database and output them on the terminal
+func FetchUserDataTerminal() error {   
 	db, err := sql.Open("sqlite3", "user_details.db")
 	
 	if err != nil{
@@ -93,6 +98,38 @@ func FetchUserData() error {
 	return nil
 }
 
+// Fetch all registered users from the database and output them as a response
+func FetchUserDataServer(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", "user_details.db")
+	
+	if err != nil{
+		//fmt.Println("Database could not be opened or created")
+		log.Fatal(err)
+		return
+	}
+
+	rows, err := db.Query("SELECT rollno, name FROM User")
+
+	if err != nil{
+		//fmt.Println("Data could not be fetched")
+		log.Fatal(err)
+		return
+	}
+
+	var data model.User
+	for rows.Next(){
+		err = rows.Scan(&data.Rollno, &data.Name)
+		if err != nil{
+			//fmt.Println("Rows could not be fetched")
+			log.Fatal(err)
+			return
+		}
+		fmt.Fprintf(w, "Rollno.: %d, Name: %s\n", data.Rollno, data.Name)
+	}
+
+}
+
+// Delete a user from the database 
 func DeleteUser(roll int) error {
 	db, err := sql.Open( "sqlite3", "user_details.db")
 

@@ -25,8 +25,6 @@ func main(){
 	}
 	*/
 
-	
-
 	r := mux.NewRouter()
 
 	r.HandleFunc("/hihi", func(w http.ResponseWriter, r *http.Request){
@@ -35,9 +33,7 @@ func main(){
 
 	r.HandleFunc("/signup", server.RegisterUser).Methods("POST")
 
-	r.HandleFunc("/getUsers", func(w http.ResponseWriter, r *http.Request){
-		db.FetchUserData()
-	})
+	r.HandleFunc("/getUsers", db.FetchUserDataServer).Methods("GET")
 
 	r.HandleFunc("/login", server.LoginUser).Methods("POST")
 
@@ -60,7 +56,7 @@ func main(){
 
 	*/
 
-	db.FetchUserData()
+	db.FetchUserDataTerminal()
 
 	
 

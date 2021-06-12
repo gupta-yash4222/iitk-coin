@@ -16,6 +16,7 @@ type Response struct {
 type JWTclaims struct {
 	Rollno int    `json:"rollno"`
 	Name   string `json:"name"`
+	Admin bool `json:"admin"`
 	jwt.StandardClaims
 }
 
