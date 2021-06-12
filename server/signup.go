@@ -38,6 +38,12 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 		if err.Error() == "sql: no rows in result set"{
 
+			if len(data.Password) == 0{
+				res.Error = "Password must contain at least one character"
+				json.NewEncoder(w).Encode(res)
+				return
+			}
+
 			hash, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
 
 			if err != nil{
