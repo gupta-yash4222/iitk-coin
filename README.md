@@ -30,7 +30,7 @@ You are required to send a request in JSON format as -
         "password": <password>
     }
 
-Secret Key used for generating JWT : **CROmium** (this can be edited in `.\server\login.go`)  
+Secret Key used for generating JWT : **CROWmium** (this can be edited in `.\server\login.go`)  
 
 Duration after which JWT expires : **25sec** (this can be edited in `.\server\login.go` by changing the value of `validDuration` variable)
 
