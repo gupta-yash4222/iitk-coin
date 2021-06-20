@@ -22,7 +22,7 @@ func FindUser(roll int) (model.User, error) {
 		return data, err
 	}
 
-	err = db.QueryRow("SELECT rollno, name, password FROM User WHERE rollno = ?", roll).Scan(&data.Rollno, &data.Name, &data.Password)
+	err = db.QueryRow("SELECT rollno, name, password, coins FROM User WHERE rollno = ?", roll).Scan(&data.Rollno, &data.Name, &data.Password, &data.Coins)
 
 	if err != nil{
 		//fmt.Println("User not found")
@@ -44,7 +44,7 @@ func AddUserData(data model.User) error {
 		return err
 	}
 
-	stmt, err := db.Prepare( "CREATE TABLE IF NOT EXISTS User ( rollno INTEGER PRIMARY KEY, name TEXT, password TEXT )")
+	stmt, err := db.Prepare( "CREATE TABLE IF NOT EXISTS User ( rollno INTEGER PRIMARY KEY, name TEXT, password TEXT, coins INTEGER )")
 	stmt.Exec()
 
 	_, err = FindUser(data.Rollno)
@@ -52,13 +52,13 @@ func AddUserData(data model.User) error {
 	if err != nil{
 
 		if err.Error() == "sql: no rows in result set" {
-			stmt, err = db.Prepare("INSERT INTO User (rollno, name, password) VALUES (?, ?, ?)")
+			stmt, err = db.Prepare("INSERT INTO User (rollno, name, password, coins) VALUES (?, ?, ?, ?)")
 			if err != nil{
 				//fmt.Println("Data could not be inserted")
 				return err
 			}
 
-			stmt.Exec(data.Rollno, data.Name, data.Password);
+			stmt.Exec(data.Rollno, data.Name, data.Password, data.Coins);
 			return nil
 		}
 
@@ -100,6 +100,13 @@ func FetchUserDataTerminal() error {
 
 // Fetch all registered users from the database and output them as a response
 func FetchUserDataServer(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		//http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
 	db, err := sql.Open("sqlite3", "user_details.db")
 	
 	if err != nil{

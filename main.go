@@ -39,6 +39,10 @@ func main(){
 
 	r.HandleFunc("/secretpage", server.WelcomeUser).Methods("GET")
 
+	r.HandleFunc("/rewardCoins", server.RewardCoins).Methods("POST")
+
+	r.HandleFunc("/getBalance", server.FetchUserBalance).Methods("GET")
+
 	log.Fatal(http.ListenAndServe(":8080", r))
 
 	/*

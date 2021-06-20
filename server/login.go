@@ -17,9 +17,16 @@ var jwtKey = []byte("CROWmium")
 var validDuration time.Duration = 25
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		//http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
-	var user model.User
+	var inputData input
 	var res model.Response
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -29,14 +36,14 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = json.Unmarshal(body, &user)
+	err = json.Unmarshal(body, &inputData)
 	if err != nil {
 		res.Error = err.Error()
 		json.NewEncoder(w).Encode(res)
 		return
 	}
 
-	data, err := db.FindUser(user.Rollno)
+	data, err := db.FindUser(inputData.Rollno)
 
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
@@ -50,13 +57,13 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Name != data.Name {
+	if inputData.Name != data.Name {
 		res.Result = "Invalid Username" // given username doesn't matches with the registered username
 		json.NewEncoder(w).Encode(res)
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(data.Password), []byte(user.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(data.Password), []byte(inputData.Password))
 
 	if err != nil {
 		res.Result = "Invalid password"
@@ -72,13 +79,13 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	expirationTime := time.Now().Add(validDuration * time.Second)
 
 	admin := false
-	if user.Rollno == 190998 {
+	if inputData.Rollno == 190998 {
 		admin = true
 	}
 
 	userClaims := model.JWTclaims{
-		Rollno:         user.Rollno,
-		Name:           user.Name,
+		Rollno:         inputData.Rollno,
+		Name:           inputData.Name,
 		Admin:          admin,
 		StandardClaims: jwt.StandardClaims{ExpiresAt: expirationTime.Unix()},
 	}
@@ -93,7 +100,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result.Rollno = user.Rollno
+	result.Rollno = inputData.Rollno
 	result.Token = tokenString
 	result.IsLoggedIn = true
 

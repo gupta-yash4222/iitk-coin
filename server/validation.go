@@ -11,6 +11,13 @@ import (
 )
 
 func WelcomeUser(w http.ResponseWriter, r *http.Request){
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		//http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
 	//tokenString := r.Header.Get("Authorization")

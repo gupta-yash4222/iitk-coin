@@ -6,6 +6,7 @@ type User struct {
 	Rollno   int    `json:"rollno"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
+	Coins int `json:"coins"`
 }
 
 type Response struct {

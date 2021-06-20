@@ -10,9 +10,23 @@ import(
 	"github.com/gupta-yash4222/iitk-coin/config/db"
 )
 
+type input struct {
+	Rollno int `json:"rollno"`
+	Name string `json:"name"`
+	Password string `json:"password"`
+}
+
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		//http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
+	var inputData input
 	var data model.User
 	var res model.Response
 
@@ -25,12 +39,17 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return 
 	}
 
-	err = json.Unmarshal(body, &data)
+	err = json.Unmarshal(body, &inputData)
 	if err != nil{
 		res.Error = err.Error()
 		json.NewEncoder(w).Encode(res)
 		return 
 	}
+
+	data.Rollno = inputData.Rollno
+	data.Name = inputData.Name
+	data.Password = inputData.Password
+	data.Coins = 0
 
 	_, err = db.FindUser(data.Rollno)
 
