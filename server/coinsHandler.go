@@ -61,8 +61,6 @@ func FetchUserBalance(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	var res model.Response
-
 	rolls, ok := r.URL.Query()["rollno"]
 	if !ok || len(rolls[0]) < 1 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -81,17 +79,15 @@ func FetchUserBalance(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 		if err.Error() == "sql: no rows in result set" {
-			res.Error = "User not registered"
-			json.NewEncoder(w).Encode(res)
+			fmt.Fprintf(w, "User with rollno %d is not registered.", rollno)
 			return
 		}
 
-		res.Error = err.Error()
-		json.NewEncoder(w).Encode(res)
+		fmt.Fprintf(w, err.Error())
 		return
 	}
 
-	fmt.Fprintf(w, "You currently have %d coins", data.Coins)
+	fmt.Fprintf(w, "You currently have %d coins ", data.Coins)
 }
 
 func TransferCoins(w http.ResponseWriter, r *http.Request){
