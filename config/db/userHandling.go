@@ -1,7 +1,7 @@
 package db
 
 import (
-	"database/sql"
+	_"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -15,14 +15,8 @@ import (
 func FindUser(roll int) (model.User, error) {  
 
 	var data model.User
-
-	db, err := sql.Open( "sqlite3", "user_details.db")
-	if err != nil{
-		return data, err
-	}
 	
-	err = db.QueryRow("SELECT rollno, name, password, coins FROM User WHERE rollno = ?", roll).Scan(&data.Rollno, &data.Name, &data.Password, &data.Coins)
-
+	err := Database.QueryRow("SELECT rollno, name, password, coins FROM User WHERE rollno = ?", roll).Scan(&data.Rollno, &data.Name, &data.Password, &data.Coins)
 	if err != nil{
 		return data, err
 	}
@@ -33,20 +27,12 @@ func FindUser(roll int) (model.User, error) {
 // Adds a user with the given credentials if not already present in the database
 func AddUserData(data model.User) error { 
 
-	db, err := sql.Open( "sqlite3", "user_details.db")
-	if err != nil{
-		return err
-	}
-
-	stmt, err := db.Prepare( "CREATE TABLE IF NOT EXISTS User ( rollno INTEGER PRIMARY KEY, name TEXT, password TEXT, coins INTEGER )")
-	stmt.Exec()
-
-	_, err = FindUser(data.Rollno)
+	_, err := FindUser(data.Rollno)
 
 	if err != nil{
 
 		if err.Error() == "sql: no rows in result set" {
-			stmt, err = db.Prepare("INSERT INTO User (rollno, name, password, coins) VALUES (?, ?, ?, ?)")
+			stmt, err := Database.Prepare("INSERT INTO User (rollno, name, password, coins) VALUES (?, ?, ?, ?)")
 			if err != nil{
 				return err
 			}
@@ -64,14 +50,8 @@ func AddUserData(data model.User) error {
 
 // Fetch all registered users from the database and output them on the terminal
 func FetchUserDataTerminal() error {   
-	db, err := sql.Open("sqlite3", "user_details.db")
-	
-	if err != nil{
-		return err
-	}
 
-	rows, err := db.Query("SELECT rollno, name FROM User")
-
+	rows, err := Database.Query("SELECT rollno, name FROM User")
 	if err != nil{
 		return err
 	}
@@ -96,15 +76,7 @@ func FetchUserDataServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := sql.Open("sqlite3", "user_details.db")
-	
-	if err != nil{
-		log.Fatal(err)
-		return
-	}
-
-	rows, err := db.Query("SELECT rollno, name FROM User")
-
+	rows, err := Database.Query("SELECT rollno, name FROM User")
 	if err != nil{
 		log.Fatal(err)
 		return
@@ -124,20 +96,14 @@ func FetchUserDataServer(w http.ResponseWriter, r *http.Request) {
 
 // Delete a user from the database 
 func DeleteUser(roll int) error {
-	db, err := sql.Open( "sqlite3", "user_details.db")
 
-	if err != nil{
-		return err
-	}
-
-	_, err = FindUser(roll)
+	_, err := FindUser(roll)
 	if err != nil{
 		log.Fatal("User not in the database")
 		return err
 	}
 
-	_, err = db.Exec("DELETE FROM User WHERE rollno = ?", roll)
-
+	_, err = Database.Exec("DELETE FROM User WHERE rollno = ?", roll)
 	if err != nil{
 		return err
 	}

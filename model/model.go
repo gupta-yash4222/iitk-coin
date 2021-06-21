@@ -2,7 +2,7 @@ package model
 
 import (
 	jwt "github.com/dgrijalva/jwt-go"
-) 
+)
 
 type User struct {
 	Rollno   int    `json:"rollno"`
@@ -27,4 +27,10 @@ type Session struct {
 	Rollno     int    `json:"rollno"`
 	Token      string `json:"token"`
 	IsLoggedIn bool   `json:"isloggedin"`
+}
+
+type TransferDetails struct {
+	SenderRollno   int `json:"senderRollno"`
+	ReceiverRollno int `json:"receiverRollno"`
+	Coins          int `json:"coins"`
 }

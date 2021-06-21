@@ -12,9 +12,8 @@ import (
 
 func WelcomeUser(w http.ResponseWriter, r *http.Request){
 
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		//http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
 
