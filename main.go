@@ -43,6 +43,11 @@ func main(){
 
 	r.HandleFunc("/getBalance", server.FetchUserBalance).Methods("GET")
 
+	r.HandleFunc("/transferCoins", server.TransferCoins).Methods("POST")
+
+	db.Database = db.OpenDatabase()
+	defer db.Database.Close()
+
 	log.Fatal(http.ListenAndServe(":8080", r))
 
 	/*

@@ -18,18 +18,14 @@ func FindUser(roll int) (model.User, error) {
 
 	db, err := sql.Open( "sqlite3", "user_details.db")
 	if err != nil{
-		//fmt.Println("Database could not be opened or created")
 		return data, err
 	}
-
+	
 	err = db.QueryRow("SELECT rollno, name, password, coins FROM User WHERE rollno = ?", roll).Scan(&data.Rollno, &data.Name, &data.Password, &data.Coins)
 
 	if err != nil{
-		//fmt.Println("User not found")
 		return data, err
 	}
-
-	//fmt.Printf("Rollno.: %d, Name: %s\n", data.Rollno, data.Name)
 
 	return data, nil
 }
@@ -38,9 +34,7 @@ func FindUser(roll int) (model.User, error) {
 func AddUserData(data model.User) error { 
 
 	db, err := sql.Open( "sqlite3", "user_details.db")
-
 	if err != nil{
-		//fmt.Println("Database could not be opened or created")
 		return err
 	}
 
@@ -54,7 +48,6 @@ func AddUserData(data model.User) error {
 		if err.Error() == "sql: no rows in result set" {
 			stmt, err = db.Prepare("INSERT INTO User (rollno, name, password, coins) VALUES (?, ?, ?, ?)")
 			if err != nil{
-				//fmt.Println("Data could not be inserted")
 				return err
 			}
 
@@ -74,14 +67,12 @@ func FetchUserDataTerminal() error {
 	db, err := sql.Open("sqlite3", "user_details.db")
 	
 	if err != nil{
-		//fmt.Println("Database could not be opened or created")
 		return err
 	}
 
 	rows, err := db.Query("SELECT rollno, name FROM User")
 
 	if err != nil{
-		//fmt.Println("Data could not be fetched")
 		return err
 	}
 
@@ -89,7 +80,6 @@ func FetchUserDataTerminal() error {
 	for rows.Next(){
 		err = rows.Scan(&data.Rollno, &data.Name)
 		if err != nil{
-			//fmt.Println("Rows could not be fetched")
 			return err
 		}
 		fmt.Printf("Rollno.: %d, Name: %s\n", data.Rollno, data.Name)
@@ -103,14 +93,12 @@ func FetchUserDataServer(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		//http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
 
 	db, err := sql.Open("sqlite3", "user_details.db")
 	
 	if err != nil{
-		//fmt.Println("Database could not be opened or created")
 		log.Fatal(err)
 		return
 	}
@@ -118,7 +106,6 @@ func FetchUserDataServer(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("SELECT rollno, name FROM User")
 
 	if err != nil{
-		//fmt.Println("Data could not be fetched")
 		log.Fatal(err)
 		return
 	}
@@ -127,7 +114,6 @@ func FetchUserDataServer(w http.ResponseWriter, r *http.Request) {
 	for rows.Next(){
 		err = rows.Scan(&data.Rollno, &data.Name)
 		if err != nil{
-			//fmt.Println("Rows could not be fetched")
 			log.Fatal(err)
 			return
 		}

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -152,5 +153,133 @@ func FetchUserBalance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "You currently have %d coins", data.Coins)
+}
+
+func TransferCoins(w http.ResponseWriter, r *http.Request){
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	var inputData TransferDetails
+	var res model.Response
+
+	if err != nil {
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	err = json.Unmarshal(body, &inputData)
+
+	_, err = db.FindUser(inputData.SenderRollno)
+
+	if err != nil {
+
+		if err.Error() == "sql: no rows in result set" {
+			res.Error = fmt.Sprint("No user with Rollno", inputData.SenderRollno)
+			res.Result = "Transaction aborted"
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	_, err = db.FindUser(inputData.ReceiverRollno)
+
+	if err != nil {
+
+		if err.Error() == "sql: no rows in result set" {
+			res.Error = fmt.Sprint("No user with Rollno", inputData.ReceiverRollno)
+			res.Result = "Transaction aborted"
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		res.Error = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	database, err := sql.Open("sqlite3", "user_details.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tx, err := database.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result, err := tx.Exec("UPDATE User SET coins = coins - ? WHERE rollno = ? AND coins - ? >= 0", inputData.Coins, inputData.SenderRollno, inputData.Coins)
+	rowsAffected, _ := result.RowsAffected()
+
+	if err != nil || rowsAffected != 1 {
+		tx.Rollback()
+		if err != nil {
+			res.Error = err.Error()
+			res.Error = "Transaction aborted"
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		if rowsAffected == 0 {
+			res.Error = "Insufficient balance"
+		} else {
+			res.Error = "Unexpected error"
+		}
+		res.Result = "Transaction aborted"
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	fmt.Println(result.RowsAffected())
+
+	result, err = tx.Exec("UPDATE User SET coins = coins + ? WHERE rollno = ?", inputData.Coins, inputData.ReceiverRollno)
+	rowsAffected, _ = result.RowsAffected()
+
+	if err != nil || rowsAffected != 1 {
+		tx.Rollback()
+		if err != nil {
+			res.Error = err.Error()
+			res.Error = "Transaction aborted"
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+
+		if rowsAffected == 0 {
+			res.Error = "Insufficient balance"
+		} else {
+			res.Error = "Unexpected error"
+		}
+		res.Result = "Transaction aborted"
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	fmt.Println(result.RowsAffected())
+
+	err = tx.Commit()
+	if err != nil {
+		res.Error = err.Error()
+		res.Result = "Transaction aborted"
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	fmt.Println("WoHooo!!! Done")
+
+	res.Result = "Transaction successful"
+	json.NewEncoder(w).Encode(res)
+
 }
 

@@ -1,12 +1,14 @@
 package model
 
-import( jwt"github.com/dgrijalva/jwt-go" )
+import (
+	jwt "github.com/dgrijalva/jwt-go"
+) 
 
 type User struct {
 	Rollno   int    `json:"rollno"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
-	Coins int `json:"coins"`
+	Coins    int    `json:"coins"`
 }
 
 type Response struct {
@@ -17,7 +19,7 @@ type Response struct {
 type JWTclaims struct {
 	Rollno int    `json:"rollno"`
 	Name   string `json:"name"`
-	Admin bool `json:"admin"`
+	Admin  bool   `json:"admin"`
 	jwt.StandardClaims
 }
 
