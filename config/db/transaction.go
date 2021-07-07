@@ -1,11 +1,11 @@
-package db 
+package db
 
 import (
-	_"database/sql"
+	_ "database/sql"
 	"fmt"
-	"strconv"
 	"math"
 	"time"
+	"log"
 
 	"github.com/gupta-yash4222/iitk-coin/model"
 	_ "github.com/mattn/go-sqlite3"
@@ -13,12 +13,22 @@ import (
 
 func AddTransactionDetails(data model.TransactionDetails) error {
 
-	stmt, err := Database.Prepare("INSERT INTO Transaction_Log (time, transactionType, senderRollno, receiverRollno, coins, remarks) VALUES (?, ?, ?, ?, ?, ?)")
+	stmt, err := Database.Prepare("INSERT INTO TransferLog (time, senderRollno, receiverRollno, coins, remarks) VALUES (?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
 
-	stmt.Exec(data.Time, data.TransactionType, data.SenderRollno, data.ReceiverRollno, data.Coins, data.Remarks)
+	stmt.Exec(data.Time, data.SenderRollno, data.ReceiverRollno, data.Coins, data.Remarks)
+	return nil
+}
+
+func AddRewardDetails(data model.RewardDetails) error {
+	stmt, err := Database.Prepare("INSERT INTO RewardLog (time, receiverRollno, coins, remarks) VALUES (?,?,?,?)")
+	if err != nil {
+		return err
+	}
+
+	stmt.Exec(data.Time, data.ReceiverRollno, data.Coins, data.Remarks)
 	return nil
 }
 
@@ -41,7 +51,8 @@ func AddCoins(rollno int, coins int) model.Response {
 		return res
 	}
 
-	if user.IsAdmin == 1 || user.IsinCoreTeam == 1 {
+	// checking whether the awardee is an admin or a council member
+	if user.IsAdmin == 1 || user.CanEarn == 0 {
 		res.Error = "User not allowed to receive a reward"
 		res.Result = "Transaction aborted"
 		return res
@@ -65,16 +76,19 @@ func AddCoins(rollno int, coins int) model.Response {
 		}
 	}
 
-	transaction := model.TransactionDetails{
+	_, err = Database.Exec("UPDATE User SET noOfEvents = noOfEvents + 1 WHERE rollno = ?", rollno)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	reward := model.RewardDetails{
 		Time: time.Now().String(),
-		TransactionType: "Reward",
-		SenderRollno: 0,
 		ReceiverRollno: rollno,
 		Coins: coins,
 		Remarks: "Coins rewarded successfully",
 	}
 
-	err = AddTransactionDetails(transaction)
+	err = AddRewardDetails(reward)
 
 	res.Result = "Transaction successful"
 	return res
@@ -85,8 +99,7 @@ func TransferCoins(data model.TransferDetails) model.Response {
 
 	var res model.Response
 
-	_, err := FindUser(data.SenderRollno)
-
+	sender, err := FindUser(data.SenderRollno)
 	if err != nil {
 
 		if err.Error() == "sql: no rows in result set" {
@@ -99,8 +112,13 @@ func TransferCoins(data model.TransferDetails) model.Response {
 		return res
 	}
 
-	_, err = FindUser(data.ReceiverRollno)
+	// checking whether the sender has participated in adequate number of events 
+	if (sender.NoOfEvents | sender.IsAdmin | sender.IsinCoreTeam) == 0 {
+		res.Result = "User has not participated in adequate number of events, thus cannot exchange coins"
+		return res
+	}
 
+	receiver, err := FindUser(data.ReceiverRollno)
 	if err != nil {
 
 		if err.Error() == "sql: no rows in result set" {
@@ -113,25 +131,22 @@ func TransferCoins(data model.TransferDetails) model.Response {
 		return res
 	}
 
-	roll1, err := strconv.Atoi(strconv.Itoa(data.SenderRollno)[:2])
-	if err != nil {
-		fmt.Println(err.Error())
-		res.Error = err.Error()
-		res.Result = "Transaction aborted"
+	// checking whether the receiver has participated in adequate number of events 
+	if (receiver.NoOfEvents | receiver.IsAdmin | receiver.IsinCoreTeam) == 0 {
+		res.Result = "User has not participated in adequate number of events, thus cannot exchange coins"
 		return res
 	}
 
-	roll2, err := strconv.Atoi(strconv.Itoa(data.ReceiverRollno)[:2])
-	if err != nil {
-		fmt.Println(err.Error())
-		res.Error = err.Error()
+	// checking whether the reciever is an admin or a council member
+	if receiver.IsAdmin == 1 || receiver.CanEarn == 0 {
+		res.Error = "User not allowed to receive coins"
 		res.Result = "Transaction aborted"
 		return res
 	}
 
 	// imposing the required tax on the transaction
 	var coins int
-	if roll1 == roll2 {
+	if sender.Batch == receiver.Batch {
 		coins = int(math.Round(0.98 * float64(data.Coins)))
 	} else {
 		coins = int(math.Round(0.77 * float64(data.Coins)))
@@ -193,7 +208,6 @@ func TransferCoins(data model.TransferDetails) model.Response {
 
 	transaction := model.TransactionDetails{
 		Time: time.Now().String(),
-		TransactionType: "Coin Transfer",
 		SenderRollno: data.SenderRollno,
 		ReceiverRollno: data.ReceiverRollno,
 		Coins: data.Coins,

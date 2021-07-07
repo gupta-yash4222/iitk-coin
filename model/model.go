@@ -9,8 +9,11 @@ type User struct {
 	Name         string `json:"name"`
 	Password     string `json:"password"`
 	Coins        int    `json:"coins"`
+	Batch        string `json:"batch"`
 	IsAdmin      int    `json:"isAdmin"`
 	IsinCoreTeam int    `json:"isinCoreTeam"`
+	CanEarn      int    `json:"canEarn"`
+	NoOfEvents   int    `json:"noOfEvents"`
 }
 
 type Response struct {
@@ -40,9 +43,15 @@ type TransferDetails struct {
 
 type TransactionDetails struct {
 	Time            string `json:"time"`
-	TransactionType string `json:"transactionType"`
 	SenderRollno    int    `json:"senderRollno"`
 	ReceiverRollno  int    `json:"receiverRollno"`
 	Coins           int    `json:"coins"`
 	Remarks         string `json:"remarks"`
+}
+
+type RewardDetails struct {
+	Time           string `json:"time"`
+	ReceiverRollno int    `json:"receiverRollno"`
+	Coins          int    `json:"coins"`
+	Remarks        string `json:"remarks"`
 }

@@ -13,8 +13,8 @@ import (
 	"github.com/gupta-yash4222/iitk-coin/model"
 )
 
-var jwtKey = []byte("CROWmium")
-var validDuration time.Duration = 25
+var jwtKey = []byte("CROWmium") // secret key for SHA256
+var validDuration time.Duration = 60 // token will expire after 1 minute
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
 
