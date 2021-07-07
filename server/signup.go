@@ -4,6 +4,7 @@ import(
 	"net/http"
 	"encoding/json"
 	"io/ioutil"
+	"strconv"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/gupta-yash4222/iitk-coin/model"
@@ -26,7 +27,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var inputData input
-	var data model.User
 	var res model.Response
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -45,10 +45,19 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return 
 	}
 
-	data.Rollno = inputData.Rollno
-	data.Name = inputData.Name
-	data.Password = inputData.Password
-	data.Coins = 0
+	batch := "Y" + strconv.Itoa(inputData.Rollno)[:2]
+
+	data := model.User{
+		Rollno:       inputData.Rollno,
+		Name:         inputData.Name,
+		Password:     inputData.Password,
+		Coins:        0,
+		Batch:        batch,
+		IsAdmin:      0,
+		IsinCoreTeam: 0,
+		CanEarn:      1,
+		NoOfEvents:   0,
+	}
 
 	_, err = db.FindUser(data.Rollno)
 

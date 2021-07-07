@@ -4,32 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"errors"
 	jwt "github.com/dgrijalva/jwt-go"
 
 
 	"github.com/gupta-yash4222/iitk-coin/model"
 )
 
-func WelcomeUser(w http.ResponseWriter, r *http.Request){
-
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
+// Validating the JSON Web Token received with the cookie 
+func ValidateUser(r *http.Request) (*model.JWTclaims, error) {
 
 	//tokenString := r.Header.Get("Authorization")
 	//splitToken := strings.Split(tokenString, "Bearer ")
 	//tokenString = splitToken[1]
 
-	var res model.Response
-
 	cookie, err := r.Cookie("token")
 	if err != nil{
-		res.Error = err.Error()
-		json.NewEncoder(w).Encode(res)
-		return
+		return nil, err
 	}
 
 	tokenString := cookie.Value
@@ -45,48 +36,68 @@ func WelcomeUser(w http.ResponseWriter, r *http.Request){
 		return jwtKey, nil
 	})
 
-	if err != nil{
-		res.Error = err.Error()
-		json.NewEncoder(w).Encode(res)
-		return
-	}
-
 	if token.Valid{
 
-		if !tokenClaims.Admin{
-			res.Result = "Access denied"
-			json.NewEncoder(w).Encode(res)
-			return
-		}
-
-		fmt.Fprintf(w, "Everyone welcome %s. We hope you have brought pizzas.", tokenClaims.Name)
-
-		res.Result = "Access granted"
-		json.NewEncoder(w).Encode(res)
-		return
+		return tokenClaims, nil
 
 	} else if ve, ok := err.(*jwt.ValidationError); ok{
 		
 		if ve.Errors & jwt.ValidationErrorMalformed != 0 {
-			res.Error = "The token is malformed!"
-			json.NewEncoder(w).Encode(res)
-			return
-		}
+			return tokenClaims, errors.New("The token is malformed!")
 
-		if ve.Errors & jwt.ValidationErrorExpired != 0{
-			res.Error = "The token has expired. Log in your account again"
-			json.NewEncoder(w).Encode(res)
-			return
+		} else if ve.Errors & (jwt.ValidationErrorExpired | jwt.ValidationErrorNotValidYet) != 0 {
+			//fmt.Println(err.Error())
+			return tokenClaims, errors.New("Token is either expired or not active yet")
+			
+		} else {
+			return tokenClaims, errors.New("Couldn't handle the token: " + err.Error())
+		
 		}
-
-		res.Error = "Couldn't handle the token: " + err.Error()
-		json.NewEncoder(w).Encode(res)
-		return
 
 	}else{
-		res.Error = "Couldn't handle the token: " + err.Error()
+		return tokenClaims, errors.New("Couldn't handle the token: " + err.Error())
+		
+	}
+
+}
+
+func WelcomeUser(w http.ResponseWriter, r *http.Request){
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var res model.Response
+
+	claims, err := ValidateUser(r)
+	if err != nil{
+
+		if err.Error() == "Token is either expired or not active yet" {
+			res.Error = err.Error()
+			res.Result = "Login again"
+			json.NewEncoder(w).Encode(res)
+		}
+
+		res.Error = err.Error()
+		res.Result = "Could not access the page"
 		json.NewEncoder(w).Encode(res)
 		return
 	}
 
+	if !claims.Admin && !claims.IsinCoreTeam {
+		res.Error = "User not authorized to access the page"
+		res.Result = "Access denied"
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	fmt.Fprintf(w, "Everyone welcome %s. We hope you have brought pizzas.", claims.Name)
+
+	res.Result = "Access granted"
+	json.NewEncoder(w).Encode(res)
+	return
+	
 }
