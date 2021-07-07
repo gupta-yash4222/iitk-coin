@@ -16,7 +16,7 @@ func FindUser(roll int) (model.User, error) {
 
 	var data model.User
 	
-	err := Database.QueryRow("SELECT rollno, name, password, coins FROM User WHERE rollno = ?", roll).Scan(&data.Rollno, &data.Name, &data.Password, &data.Coins)
+	err := Database.QueryRow("SELECT rollno, name, password, coins, isAdmin, isinCoreTeam FROM User WHERE rollno = ?", roll).Scan(&data.Rollno, &data.Name, &data.Password, &data.Coins, &data.IsAdmin, &data.IsinCoreTeam)
 	if err != nil{
 		return data, err
 	}
@@ -32,12 +32,12 @@ func AddUserData(data model.User) error {
 	if err != nil{
 
 		if err.Error() == "sql: no rows in result set" {
-			stmt, err := Database.Prepare("INSERT INTO User (rollno, name, password, coins) VALUES (?, ?, ?, ?)")
+			stmt, err := Database.Prepare("INSERT INTO User (rollno, name, password, coins, isAdmin, isinCoreTeam) VALUES (?, ?, ?, ?, ?, ?)")
 			if err != nil{
 				return err
 			}
 
-			stmt.Exec(data.Rollno, data.Name, data.Password, data.Coins);
+			stmt.Exec(data.Rollno, data.Name, data.Password, data.Coins, data.IsAdmin, data.IsinCoreTeam);
 			return nil
 		}
 

@@ -53,7 +53,7 @@ func WelcomeUser(w http.ResponseWriter, r *http.Request){
 
 	if token.Valid{
 
-		if !tokenClaims.Admin{
+		if !tokenClaims.Admin && !tokenClaims.IsinCoreTeam {
 			res.Result = "Access denied"
 			json.NewEncoder(w).Encode(res)
 			return

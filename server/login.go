@@ -77,15 +77,28 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	expirationTime := time.Now().Add(validDuration * time.Second)
 
+	/*
+		admin := false
+		if inputData.Rollno == 190998 {
+			admin = true
+		}
+	*/
+
 	admin := false
-	if inputData.Rollno == 190998 {
+	if data.IsAdmin == 1 {
 		admin = true
+	}
+
+	core_team := false
+	if data.IsinCoreTeam == 1 {
+		core_team = true
 	}
 
 	userClaims := model.JWTclaims{
 		Rollno:         inputData.Rollno,
 		Name:           inputData.Name,
 		Admin:          admin,
+		IsinCoreTeam:   core_team,
 		StandardClaims: jwt.StandardClaims{ExpiresAt: expirationTime.Unix()},
 	}
 
@@ -106,8 +119,8 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	//json.NewEncoder(w).Encode(res)
 
 	http.SetCookie(w, &http.Cookie{
-		Name:  "token",
-		Value: tokenString,
+		Name:     "token",
+		Value:    tokenString,
 		HttpOnly: true,
 	})
 

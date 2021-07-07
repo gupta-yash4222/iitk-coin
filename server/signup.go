@@ -49,6 +49,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	data.Name = inputData.Name
 	data.Password = inputData.Password
 	data.Coins = 0
+	data.IsAdmin = 0
+	data.IsinCoreTeam = 0
 
 	_, err = db.FindUser(data.Rollno)
 
