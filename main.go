@@ -45,6 +45,16 @@ func main(){
 
 	r.HandleFunc("/transferCoins", server.TransferCoins).Methods("POST")
 
+	r.HandleFunc("/getItems", db.FetchItems).Methods("GET")
+
+	r.HandleFunc("/addItems", server.AddItem).Methods("POST")
+
+	r.HandleFunc("/getRedeemRequests", db.FetchRedeemRequests).Methods("GET")
+
+	r.HandleFunc("/redeemCoins", server.RedeemCoins).Methods("POST")
+
+	r.HandleFunc("/verifyRedeems", server.VerifyRedeemRequest).Methods("POST")
+
 	db.Database = db.OpenDatabase()
 	defer db.Database.Close()
 

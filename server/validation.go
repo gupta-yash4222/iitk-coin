@@ -76,9 +76,9 @@ func WelcomeUser(w http.ResponseWriter, r *http.Request){
 	if err != nil{
 
 		if err.Error() == "Token is either expired or not active yet" {
-			res.Error = err.Error()
-			res.Result = "Login again"
+			res.Error = "Session expired. Login again."
 			json.NewEncoder(w).Encode(res)
+			return
 		}
 
 		res.Error = err.Error()

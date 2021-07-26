@@ -3,9 +3,9 @@ package db
 import (
 	_ "database/sql"
 	"fmt"
+	"log"
 	"math"
 	"time"
-	"log"
 
 	"github.com/gupta-yash4222/iitk-coin/model"
 	_ "github.com/mattn/go-sqlite3"
@@ -62,7 +62,7 @@ func AddCoins(rollno int, coins int) model.Response {
 	rowsAffected, _ := result.RowsAffected()
 
 	if err != nil || rowsAffected != 1 {
-		
+
 		if err != nil {
 			res.Error = err.Error()
 			res.Result = "Transaction aborted"
@@ -82,10 +82,10 @@ func AddCoins(rollno int, coins int) model.Response {
 	}
 
 	reward := model.RewardDetails{
-		Time: time.Now().String(),
+		Time:           time.Now().String(),
 		ReceiverRollno: rollno,
-		Coins: coins,
-		Remarks: "Coins rewarded successfully",
+		Coins:          coins,
+		Remarks:        "Coins rewarded successfully",
 	}
 
 	err = AddRewardDetails(reward)
@@ -112,7 +112,7 @@ func TransferCoins(data model.TransferDetails) model.Response {
 		return res
 	}
 
-	// checking whether the sender has participated in adequate number of events 
+	// checking whether the sender has participated in adequate number of events
 	if (sender.NoOfEvents | sender.IsAdmin | sender.IsinCoreTeam) == 0 {
 		res.Result = "User has not participated in adequate number of events, thus cannot exchange coins"
 		return res
@@ -131,7 +131,7 @@ func TransferCoins(data model.TransferDetails) model.Response {
 		return res
 	}
 
-	// checking whether the receiver has participated in adequate number of events 
+	// checking whether the receiver has participated in adequate number of events
 	if (receiver.NoOfEvents | receiver.IsAdmin | receiver.IsinCoreTeam) == 0 {
 		res.Result = "User has not participated in adequate number of events, thus cannot exchange coins"
 		return res
@@ -166,7 +166,7 @@ func TransferCoins(data model.TransferDetails) model.Response {
 		tx.Rollback()
 		if err != nil {
 			res.Error = err.Error()
-			res.Error = "Transaction aborted"
+			res.Result = "Transaction aborted"
 			return res
 		}
 
@@ -186,7 +186,7 @@ func TransferCoins(data model.TransferDetails) model.Response {
 		tx.Rollback()
 		if err != nil {
 			res.Error = err.Error()
-			res.Error = "Transaction aborted"
+			res.Result = "Transaction aborted"
 			return res
 		}
 
@@ -207,11 +207,11 @@ func TransferCoins(data model.TransferDetails) model.Response {
 	}
 
 	transaction := model.TransactionDetails{
-		Time: time.Now().String(),
-		SenderRollno: data.SenderRollno,
+		Time:           time.Now().String(),
+		SenderRollno:   data.SenderRollno,
 		ReceiverRollno: data.ReceiverRollno,
-		Coins: data.Coins,
-		Remarks: "Coins transferred successfully",
+		Coins:          data.Coins,
+		Remarks:        "Coins transferred successfully",
 	}
 
 	err = AddTransactionDetails(transaction)

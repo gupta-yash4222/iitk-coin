@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"log"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -30,9 +31,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		res.Error = err.Error()
-		json.NewEncoder(w).Encode(res)
-		return
+		log.Fatal(err)
 	}
 
 	err = json.Unmarshal(body, &inputData)
@@ -65,7 +64,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	err = bcrypt.CompareHashAndPassword([]byte(data.Password), []byte(inputData.Password))
 
 	if err != nil {
-		res.Result = "Invalid password"
+		res.Error = "Invalid password"
 		json.NewEncoder(w).Encode(res)
 		return
 	}

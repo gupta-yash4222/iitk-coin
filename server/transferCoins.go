@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -34,8 +35,7 @@ func RewardCoins(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 		if err.Error() == "Token is either expired or not active yet" {
-			res.Error = err.Error()
-			res.Result = "Login again"
+			res.Error = "Session expired. Login again."
 			json.NewEncoder(w).Encode(res)
 			return
 		}
@@ -48,7 +48,7 @@ func RewardCoins(w http.ResponseWriter, r *http.Request) {
 
 	if !claims.Admin {
 		res.Error = "User not authorized for the action"
-		res.Result = "Action denied"
+		res.Result = "Permission denied"
 		json.NewEncoder(w).Encode(res)
 		return
 	}
@@ -59,10 +59,7 @@ func RewardCoins(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err != nil {
-		//log.Fatal(err)
-		res.Error = err.Error()
-		json.NewEncoder(w).Encode(res)
-		return
+		log.Fatal(err)
 	}
 
 	err = json.Unmarshal(body, &data)
@@ -134,9 +131,7 @@ func TransferCoins(w http.ResponseWriter, r *http.Request){
 	var res model.Response
 
 	if err != nil {
-		res.Error = err.Error()
-		json.NewEncoder(w).Encode(res)
-		return
+		log.Fatal(err)
 	}
 
 	err = json.Unmarshal(body, &inputData)
@@ -146,8 +141,7 @@ func TransferCoins(w http.ResponseWriter, r *http.Request){
 	if err != nil {
 
 		if err.Error() == "Token is either expired or not active yet" {
-			res.Error = err.Error()
-			res.Result = "Login again"
+			res.Error = "Session expired. Login again."
 			json.NewEncoder(w).Encode(res)
 			return
 		}
@@ -160,7 +154,7 @@ func TransferCoins(w http.ResponseWriter, r *http.Request){
 
 	if claims.Rollno != inputData.SenderRollno {
 		res.Error = "User not authorized for the action"
-		res.Result = "Action denied"
+		res.Result = "Permission denied"
 		json.NewEncoder(w).Encode(res)
 		return
 	}

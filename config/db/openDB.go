@@ -21,7 +21,7 @@ func OpenDatabase() *sql.DB {
 	}
 	stmt.Exec()
 
-	stmt, err = database.Prepare("CREATE TABLE IF NOT EXISTS Items ( itemId TEXT PRIMARY KEY, itemDescription TEXT, price INTEGER )")
+	stmt, err = database.Prepare("CREATE TABLE IF NOT EXISTS Items ( itemId TEXT PRIMARY KEY, itemDescription TEXT, quantity INTEGER, price INTEGER )")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,7 +33,13 @@ func OpenDatabase() *sql.DB {
 	}
 	stmt.Exec()
 
-	stmt, err = database.Prepare("CREATE TABLE IF NOT EXISTS RewardLog (time TEXT, receiverRollno INTEGER, coins INTEGER, remarks TEXT )")
+	stmt, err = database.Prepare("CREATE TABLE IF NOT EXISTS RewardLog ( time TEXT, receiverRollno INTEGER, coins INTEGER, remarks TEXT )")
+	if err != nil {
+		log.Fatal(err)
+	}
+	stmt.Exec()
+
+	stmt, err = database.Prepare("CREATE TABLE IF NOT EXISTS RedeemLog ( id INTEGER PRIMARY KEY AUTOINCREMENT, time TEXT, rollno INTEGER, itemId TEXT, coins INTEGER, status TEXT, remarks TEXT )")
 	if err != nil {
 		log.Fatal(err)
 	}

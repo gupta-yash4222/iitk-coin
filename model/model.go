@@ -42,11 +42,11 @@ type TransferDetails struct {
 }
 
 type TransactionDetails struct {
-	Time            string `json:"time"`
-	SenderRollno    int    `json:"senderRollno"`
-	ReceiverRollno  int    `json:"receiverRollno"`
-	Coins           int    `json:"coins"`
-	Remarks         string `json:"remarks"`
+	Time           string `json:"time"`
+	SenderRollno   int    `json:"senderRollno"`
+	ReceiverRollno int    `json:"receiverRollno"`
+	Coins          int    `json:"coins"`
+	Remarks        string `json:"remarks"`
 }
 
 type RewardDetails struct {
@@ -54,4 +54,21 @@ type RewardDetails struct {
 	ReceiverRollno int    `json:"receiverRollno"`
 	Coins          int    `json:"coins"`
 	Remarks        string `json:"remarks"`
+}
+
+type Item struct {
+	ItemId          string `json:"itemId"`
+	ItemDescription string `json:"itemDescription"`
+	Quantity        int    `json:"quantity"`
+	Price           int    `json:"price"`
+}
+
+type RedeemDetails struct {
+	Id      int    `json:"id"`
+	Time    string `json:"time"`
+	Rollno  int    `json:"rollno"`
+	ItemId  string `json:"itemId"`
+	Coins   int    `json:"coins"`
+	Status  string `json:"status"`
+	Remarks string `json:"remarks"`
 }
